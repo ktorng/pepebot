@@ -25,7 +25,9 @@ SECRET_KEY = '49rd&14tc1*+=+c4gtc^omm33sy=vshi#wz%(w6z5b^n3xs+xk'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'pepebot.eba-kzpkj8rm.us-west-2.elasticbeanstalk.com',
+]
 
 
 # Application definition
@@ -105,7 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Pacific'
 
 USE_I18N = True
 
