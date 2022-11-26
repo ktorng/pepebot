@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'pepebot.eba-kzpkj8rm.us-west-2.elasticbeanstalk.com',
     '127.0.0.1',
+    '*',
 ]
 
 
