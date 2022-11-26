@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'pepebot.eba-kzpkj8rm.us-west-2.elasticbeanstalk.com',
+    '127.0.0.1',
 ]
 
 
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'actions',
 ]
 
 MIDDLEWARE = [
@@ -120,3 +122,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Slack client
+VERIFICATION_TOKEN = 'COt3cvhK4OCCI3XBfbsKxnhe'
+# OAUTH_ACCESS_TOKEN = '************'
+BOT_USER_ACCESS_TOKEN = 'xoxb-4181399072-4428255816530-9FNblWuOWOw9SOuHCfXKgmyw'
+CLIENT_ID = '4181399072.4425421504292'
+CLIENT_SECRET = 'b4208f61daad7f0d6d6284d1d70d883e'
