@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-import json
 from django.http import HttpResponse, JsonResponse
-import slack
+
+import json
+
+from actions.api.slack import SlackClient
 
 @csrf_exempt
 def event_hook(request):
-    client = slack.WebClient(token=settings.BOT_USER_ACCESS_TOKEN)
     json_dict = json.loads(request.body.decode('utf-8'))
     if json_dict['token'] != settings.VERIFICATION_TOKEN:
         return HttpResponse(status=403)
@@ -17,17 +18,11 @@ def event_hook(request):
             response_dict = {"challenge": json_dict['challenge']}
             return JsonResponse(response_dict, safe=False)
 
-    print(json_dict)
-
     if 'event' in json_dict:
         event_msg = json_dict['event']
         if ('subtype' in event_msg) and (event_msg['subtype'] == 'bot_message'):
             return HttpResponse(status=200)
+        client = SlackClient()
+        client.process_event(event_msg)
 
-    if event_msg['type'] == 'app_mention':
-        user = event_msg['user']
-        channel = event_msg['channel']
-        response_msg = ":wave:, Hello <@%s>" % user
-        client.chat_postMessage(channel=channel, text=response_msg)
-        return HttpResponse(status=200)
     return HttpResponse(status=200)
