@@ -20,4 +20,4 @@ class FrankerfacezClient:
         }
         r = requests.get(BASE_URL + '/emotes', params=params)
         response = r.json()
-        logger.info('Received frankerfaces get emote response: %s', response)
+        logger.info('Received frankerfacez get emote response: %s', response)
