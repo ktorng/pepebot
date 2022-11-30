@@ -12,31 +12,35 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 from django.utils.log import DEFAULT_LOGGING
 
+from pathlib import Path
+from dotenv import load_dotenv
 import logging.config
 import os
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '49rd&14tc1*+=+c4gtc^omm33sy=vshi#wz%(w6z5b^n3xs+xk'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DEBUG = int(os.environ.get("DEBUG", default=0))
+PRODUCTION = int(os.environ.get("PRODUCTION", default=1))
 ALLOWED_HOSTS = [
     'pepebot.eba-kzpkj8rm.us-west-2.elasticbeanstalk.com',
     '127.0.0.1',
     '*',
 ]
-
+DATABASES = {
+    "default": {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", str(BASE_DIR / "db.sqlite3")),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
+    }
+}
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'actions',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -76,18 +81,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pepebot.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -130,7 +123,7 @@ STATIC_URL = '/static/'
 # Slack client
 VERIFICATION_TOKEN = 'COt3cvhK4OCCI3XBfbsKxnhe'
 # OAUTH_ACCESS_TOKEN = '************'
-BOT_USER_ACCESS_TOKEN = 'xoxb-4181399072-4428255816530-9FNblWuOWOw9SOuHCfXKgmyw'
+BOT_USER_ACCESS_TOKEN = 'xoxb-4181399072-4428255816530-cQMm3v932dXLhegzG2sJndPQ'
 CLIENT_ID = '4181399072.4425421504292'
 CLIENT_SECRET = 'b4208f61daad7f0d6d6284d1d70d883e'
 
@@ -174,3 +167,14 @@ logging.config.dictConfig({
         'django.server': DEFAULT_LOGGING['loggers']['django.server'],
     },
 })
+
+#Celery, Celery Beat and Redis settings
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379")
+if CELERY_RESULT_BACKEND == 'django-db':
+    INSTALLED_APPS += ['django_celery_results',]
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'US/Pacific'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
