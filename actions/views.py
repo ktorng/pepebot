@@ -9,6 +9,9 @@ from actions.api.slack import SlackClient
 
 @csrf_exempt
 def event_hook(request):
+    """
+    Endpoint for slack events
+    """
     json_dict = json.loads(request.body.decode('utf-8'))
     if json_dict['token'] != settings.VERIFICATION_TOKEN:
         return HttpResponse(status=403)
@@ -26,3 +29,10 @@ def event_hook(request):
         client.process_event(event_msg)
 
     return HttpResponse(status=200)
+
+@csrf_exempt
+def message_action(request):
+    """
+    Endpoint for slack interactive messages (actions, buttons)
+    """
+    json_dict = json.loads(request.body.decode('utf-8'))
