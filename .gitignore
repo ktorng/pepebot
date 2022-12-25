@@ -7,3 +7,5 @@
 *.sqlite3
 .env
 venv/**
+dump.rdb
+.vscode/**
