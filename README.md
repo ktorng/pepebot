@@ -1,4 +1,7 @@
 # Running locally
+
+Activate venv: `source venv/bin/activate`
+
 Start redis server: `redis-server`
 
 Start a celery (with beat) worker: `celery -A pepebot.celery worker --pool=solo -l info --beat`
