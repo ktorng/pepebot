@@ -126,6 +126,7 @@ BOT_USER_ACCESS_TOKEN = os.environ.get("SLACK_BOT_USER_ACCESS_TOKEN")
 SLACK_USER_ACCESS_TOKEN = os.environ.get("SLACK_USER_ACCESS_TOKEN")
 CLIENT_ID = os.environ.get("SLACK_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("SLACK_CLIENT_SECRET")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # Disable Django's logging setup
 LOGGING_CONFIG = None
