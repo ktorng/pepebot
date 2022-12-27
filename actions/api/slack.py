@@ -1,4 +1,5 @@
 from django.conf import settings
+from enum import Enum
 
 import slack
 import logging
@@ -15,15 +16,20 @@ from actions.utils.slack import (
 logger = logging.getLogger(__name__)
 
 
+class MessageActionType(Enum):
+    add_emoji = "add_emoji"
+    remove_emoji = "remove_emoji"
+
+
 class SlackClient:
     def __init__(self):
         self.client = slack.WebClient(token=settings.BOT_USER_ACCESS_TOKEN)
+        self.user_client = slack.WebClient(token=settings.SLACK_USER_ACCESS_TOKEN)
         self.frankerfacez = FrankerfacezClient()
 
     def process_event(self, event_msg):
         if event_msg["type"] == "app_mention":
             logger.info("Received app mention: %s", event_msg)
-            user = event_msg["user"]
             channel = event_msg["channel"]
 
             text = get_app_mention_text(event_msg)
@@ -39,7 +45,7 @@ class SlackClient:
 
             blocks = []
             if first_result:
-                emoji_url = first_result["urls"]["4"]
+                emoji_url = first_result["urls"]["2"]
                 emoji_name = first_result["name"]
                 json_value = json.dumps(
                     {
@@ -50,17 +56,84 @@ class SlackClient:
                 add_button = get_button_element(
                     text="Add emoji", action_id="add_emoji", value=json_value
                 )
+                remove_button = get_button_element(
+                    text="Remove emoji", action_id="remove_emoji", value=json_value
+                )
 
-                blocks.append(get_action_block(elements=[add_button]))
+                blocks.append(get_action_block(elements=[add_button, remove_button]))
                 blocks.append(get_image_block(image_url=emoji_url, alt_text=emoji_name))
 
             self.client.chat_postMessage(channel=channel, blocks=blocks)
 
     def process_message_action(self, payload):
-        logger.info("Received message_action action: %s", payload["actions"])
+        logger.info("Received message_action action payload: %s", payload)
+
+        action = payload["actions"][0]
+        channel = payload["container"]["channel_id"]
+        action_id = MessageActionType[action["action_id"]]
+        value = json.loads(action["value"])
+        print(action_id, MessageActionType.add_emoji)
+
+        if action_id is MessageActionType.add_emoji:
+            name = value["name"]
+            url = value["url"]
+
+            return self.add_emoji(channel, name, url)
+        if action_id is MessageActionType.remove_emoji:
+            name = value["name"]
+
+            return self.remove_emoji(channel, name)
 
     def handle_unknown_message(self, channel):
         self.client.chat_postMessage(
             channel=channel,
             text="I did not understand your request. Please try something else.",
         )
+
+    def handle_unknown_error(self, channel):
+        self.client.chat_postMessage(
+            channel=channel,
+            text="Something went wrong. Please try again later.",
+        )
+
+    def add_emoji(self, channel, name, url):
+        """
+        Add a custom reaction to this workspace
+        """
+        logger.info("Adding emoji: %s", name)
+        cookies = json.dumps(
+            {
+                "d": "xoxd-OpwRR+FBa3R5AYpeJe55FpHIcCihrgyWg81UXurb/q0fi9cz38aJA+NXVFpAWMWZn7u5d9O2Lg2SO7JR0D1Iep+e4d5aT/GuWQh4aak8t/ffbe3WPwbhZfNVirAPhJxEUASJcbwORhT4xggXqBzs1qK79DfQFDMRvZxBeavAi6Ff4W3cZAu5kw=="
+            }
+        )
+        response = self.user_client.api_call(
+            api_method="emoji.add",
+            json=json.dumps({"name": name, "url": url}),
+            headers={
+                "Cookie": cookies,
+            },
+        )
+        logger.info("[API][Response] Add emoji: %s", name)
+        assert response["ok"]
+        self.client.chat_postMessage(
+            channel=channel,
+            text="Emoji `{name}` has been added. :{name}:".format(name=name),
+        )
+
+    def remove_emoji(self, channel, name):
+        """
+        Remove a custom reaction from this workspace
+        """
+        try:
+            logger.info("Removing emoji: %s", name)
+            response = self.client.api_call(
+                api_method="admin.emoji.remove",
+                json=json.dumps({"name": name}),
+            )
+            assert response["ok"]
+            self.client.chat_postMessage(
+                channel=channel,
+                text="Emoji `{name}` has been removed.".format(name=name),
+            )
+        except:
+            self.handle_unknown_error(channel)
