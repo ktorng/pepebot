@@ -143,17 +143,9 @@ class SlackClient:
         Add a custom reaction to this workspace
         """
         logger.info("Adding emoji: %s", name)
-        cookies = json.dumps(
-            {
-                "d": "xoxd-OpwRR+FBa3R5AYpeJe55FpHIcCihrgyWg81UXurb/q0fi9cz38aJA+NXVFpAWMWZn7u5d9O2Lg2SO7JR0D1Iep+e4d5aT/GuWQh4aak8t/ffbe3WPwbhZfNVirAPhJxEUASJcbwORhT4xggXqBzs1qK79DfQFDMRvZxBeavAi6Ff4W3cZAu5kw=="
-            }
-        )
         response = self.user_client.api_call(
             api_method="emoji.add",
             json=json.dumps({"name": name, "url": url}),
-            headers={
-                "Cookie": cookies,
-            },
         )
         logger.info("[API][Response] Add emoji: %s", name)
         assert response["ok"]
